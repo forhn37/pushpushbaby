@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Message Sender</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div id ='hana'>메세지
+    </div>
+    <form id="messageForm">
+        <input type="text" id="messageInput" placeholder="Enter your message here" />
+        <button type="submit">Send Message</button>
+    </form>
+    <script>
+        document.getElementById('messageForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value;
+            messageInput.value = ''; // Clear the input after sending
+
+            try {
+                const response = await fetch('http://localhost:3000/send-message', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message }),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to send message');
+                }
+
+                alert('Message sent successfully!');
+            } catch (error) {
+                console.error('Error sending message:', error);
+                alert('Error sending message');
+            }
+        });
+    </script>
+</body>
+
+</html>
