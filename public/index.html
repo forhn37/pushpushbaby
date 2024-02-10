@@ -1,45 +1,37 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-    <title>Message Sender</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>푸시 알림 허용 요청</title>
 </head>
-
 <body>
-    <div id ='hana'>메세지
-    </div>
-    <form id="messageForm">
-        <input type="text" id="messageInput" placeholder="Enter your message here" />
-        <button type="submit">Send Message</button>
-    </form>
-    <script>
-        document.getElementById('messageForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const messageInput = document.getElementById('messageInput');
-            const message = messageInput.value;
-            messageInput.value = ''; // Clear the input after sending
+  <button id="subscribeButton">푸시 알림 허용</button>
 
-            try {
-                const response = await fetch('http://localhost:3000/send-message', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ message }),
-                });
+  <script>
+    // 서비스 워커 등록 및 알림 구독 요청
+    async function subscribeToNotifications() {
+      // 서비스 워커 등록
+      const registration = await navigator.serviceWorker.register('/service-worker.js', { scope: '/' });
 
-                if (!response.ok) {
-                    throw new Error('Failed to send message');
-                }
+      // 서비스 워커로 푸시 알림 구독 요청 전달
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: 'YOUR_PUBLIC_KEY_FROM_FIREBASE'
+      });
 
-                alert('Message sent successfully!');
-            } catch (error) {
-                console.error('Error sending message:', error);
-                alert('Error sending message');
-            }
-        });
-    </script>
+      // 구독 정보를 서버로 전송
+      await sendSubscriptionToServer(subscription);
+    }
+
+    // 구독 정보를 서버로 전송하는 함수
+    async function sendSubscriptionToServer(subscription) {
+      // 구독 정보를 서버로 전송하는 코드 작성
+      console.log('구독 정보를 서버로 전송합니다.');
+    }
+
+    // 초기화: 알림 구독 요청 버튼에 이벤트 리스너 추가
+    document.getElementById('subscribeButton').addEventListener('click', subscribeToNotifications);
+  </script>
 </body>
-
 </html>
