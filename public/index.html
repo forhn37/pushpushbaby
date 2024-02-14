@@ -4,34 +4,105 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>푸시 알림 허용 요청</title>
+  <style>
+    /* 모달 스타일 */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-content {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: white;
+      padding: 20px;
+      border-radius: 10px;
+    }
+
+    /* 버튼 스타일 */
+    .btn {
+      padding: 10px 20px;
+      margin-right: 10px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-  <button id="subscribeButton">푸시 알림 허용</button>
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <p>푸시 알림을 허용하시겠습니까?</p>
+      <button id="allowNotificationButton" class="btn">허용</button>
+      <button id="denyBtn" class="btn">거부</button>
+    </div>
+  </div>
+
+  <button id="subscribeButton" style="display: none;">푸시 알림 허용</button>
 
   <script>
-    // 서비스 워커 등록 및 알림 구독 요청
-    async function subscribeToNotifications() {
-      // 서비스 워커 등록
-      const registration = await navigator.serviceWorker.register('/service-worker.js', { scope: '/' });
-
-      // 서비스 워커로 푸시 알림 구독 요청 전달
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: 'YOUR_PUBLIC_KEY_FROM_FIREBASE'
-      });
-
-      // 구독 정보를 서버로 전송
-      await sendSubscriptionToServer(subscription);
+   // 서비스 워커 등록
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', async () => {
+    try {
+      const registration = await navigator.serviceWorker.register('/service-worker.js');
+      console.log('서비스 워커가 등록되었습니다.');
+    } catch (error) {
+      console.error('서비스 워커 등록에 실패했습니다:', error);
     }
+  });
+}
 
-    // 구독 정보를 서버로 전송하는 함수
-    async function sendSubscriptionToServer(subscription) {
-      // 구독 정보를 서버로 전송하는 코드 작성
-      console.log('구독 정보를 서버로 전송합니다.');
+// 알림 허용 요청
+async function requestNotificationPermission() {
+  try {
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      console.log('알림 허용이 허가되었습니다.');
+      subscribeToNotifications(); // 알림 구독 요청
+    } else {
+      console.warn('사용자가 알림을 거부했습니다.');
     }
+  } catch (error) {
+    console.error('알림 허용 요청에 실패했습니다:', error);
+  }
+}
 
-    // 초기화: 알림 구독 요청 버튼에 이벤트 리스너 추가
-    document.getElementById('subscribeButton').addEventListener('click', subscribeToNotifications);
+// 알림 허용 요청 버튼 클릭 시
+document.getElementById('allowNotificationButton').addEventListener('click', requestNotificationPermission);
+
+// 알림 구독 요청
+async function subscribeToNotifications() {
+  const registration = await navigator.serviceWorker.ready;
+  const subscription = await registration.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: 'YOUR_PUBLIC_KEY_FROM_FIREBASE'
+  });
+  sendSubscriptionToServer(subscription); // 구독 정보 서버로 전송
+}
+
+// 구독 정보 서버로 전송
+async function sendSubscriptionToServer(subscription) {
+  const response = await fetch('/subscribe', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(subscription)
+  });
+
+  if (response.ok) {
+    console.log('구독 정보가 성공적으로 서버에 전송되었습니다.');
+  } else {
+    console.error('구독 정보 전송에 실패했습니다.');
+  }
+}
+
   </script>
 </body>
 </html>
